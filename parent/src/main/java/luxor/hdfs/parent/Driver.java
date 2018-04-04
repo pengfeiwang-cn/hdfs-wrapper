@@ -13,7 +13,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,10 +32,10 @@ public class Driver {
 //        child = Runtime.getRuntime().exec(cmd);
         ProcessBuilder pb = new ProcessBuilder(cmd);
         //pb.directory(new File("/tmp/fuck"));
-        File log = new File("/tmp/fuck/log");
-        pb.redirectErrorStream(true);
-        pb.redirectOutput();
-        pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
+//        File log = new File("/tmp/fuck/log");
+//        pb.redirectErrorStream(true);
+//        pb.redirectOutput();
+//        pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
         child = pb.start();
 //        try {
 //            int fuck = child.waitFor();
@@ -107,15 +106,18 @@ public class Driver {
                                     onGetFileStatus((GetFileStatusCommand) cmd);
                                     break;
                                 }
+                                case Pipeable.SETWORKINGDIRECTORY: {
+                                    onSetWorkingDirectory((SetWorkingDirectoryCommand) cmd);
+                                    break;
+                                }
                                 // TODO: not finished.
                                 default:
                                     assert(false);
                             }
-                            controlChannel.sendCommand(new Succeeded());
                         }
                         catch (IOException e) {
                             try {
-                                controlChannel.sendCommand(new PipedException(e.getMessage()));
+                                controlChannel.sendResponse(new PipedException(e.getMessage()));
                             } catch (IOException ex) {
                                 logger.error("Control channel is broken.", ex);
                                 finishedStatus = -1;
@@ -131,18 +133,26 @@ public class Driver {
         return (ret != 0 || finishedStatus != 0) ? -1 : 0;
     }
 
+    private void onSetWorkingDirectory(SetWorkingDirectoryCommand cmd) throws IOException {
+        fs.setWorkingDirectory(cmd.getPath());
+        controlChannel.sendResponse(new Succeeded());
+    }
+
     private void onGetFileStatus(GetFileStatusCommand cmd) throws IOException {
         FileStatus status = fs.getFileStatus(cmd.getPath());
+        controlChannel.sendResponse(new Succeeded());
         StreamUtils.writeWritable(controlChannel.getOutput(), status);
     }
 
     private void onRename(RenameCommand cmd) throws IOException {
         boolean result = fs.rename(cmd.getSrc(), cmd.getDst());
+        controlChannel.sendResponse(new Succeeded());
         StreamUtils.writeBoolean(controlChannel.getOutput(), result);
     }
 
     private void onDelete(DeleteCommand cmd) throws IOException {
         boolean result = fs.delete(cmd.getPath(), cmd.isRecursive());
+        controlChannel.sendResponse(new Succeeded());
         StreamUtils.writeBoolean(controlChannel.getOutput(), result);
     }
 
@@ -150,30 +160,35 @@ public class Driver {
         assert(readers.containsKey(cmd.getNamedPipe()));
         InProxy inProxy = readers.get(cmd.getNamedPipe());
         inProxy.close();
+        controlChannel.sendResponse(new Succeeded());
     }
 
     private void onCloseWriter(CloseWriterCommand cmd) throws IOException {
         assert(writers.containsKey(cmd.getNamedPipe()));
         OutProxy outProxy = writers.get(cmd.getNamedPipe());
         outProxy.close();
+        controlChannel.sendResponse(new Succeeded());
     }
 
     private void onFlush(FlushCommand cmd) throws IOException {
         assert(writers.containsKey(cmd.getNamedPipe()));
         OutProxy outProxy = writers.get(cmd.getNamedPipe());
         outProxy.hflush();
+        controlChannel.sendResponse(new Succeeded());
     }
 
     private void onSync(SyncCommand cmd) throws IOException {
         assert(writers.containsKey(cmd.getNamedPipe()));
         OutProxy outProxy = writers.get(cmd.getNamedPipe());
         outProxy.hsync();
+        controlChannel.sendResponse(new Succeeded());
     }
 
     private void onRead(ReadCommand rc) throws IOException {
         assert(readers.containsKey(rc.getNamedPipe()));
         InProxy inProxy = readers.get(rc.getNamedPipe());
         inProxy.read(rc.getLength());
+        controlChannel.sendResponse(new Succeeded());
     }
 
     private void onOpen(OpenCommand oc) throws IOException {
@@ -182,6 +197,7 @@ public class Driver {
         FileOutputStream dataChannel = new FileOutputStream(oc.getNamedPipe());
         InProxy inProxy = new InProxy(input, dataChannel);
         readers.put(oc.getNamedPipe(), inProxy);
+        controlChannel.sendResponse(new Succeeded());
     }
 
     private void onCreate(CreateCommand cc) throws IOException {
@@ -194,11 +210,13 @@ public class Driver {
         FileInputStream dataChannel = new FileInputStream(cc.getNamedPipe());
         OutProxy outProxy = new OutProxy(output, dataChannel);
         writers.put(cc.getNamedPipe(), outProxy);
+        controlChannel.sendResponse(new Succeeded());
     }
 
     private void onWrite(WriteCommand wc) throws IOException {
         assert(writers.containsKey(wc.getNamedPipe()));
         OutProxy outProxy = writers.get(wc.getNamedPipe());
         outProxy.write(wc.getLength());
+        controlChannel.sendResponse(new Succeeded());
     }
 }

@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 
 /**
@@ -53,7 +54,7 @@ public class PipedFileSystem extends FileSystem {
     public FSDataInputStream open(Path f, int bufferSize) throws IOException {
         String namedPipe = createNamedPipe(f);
         OpenCommand open = new OpenCommand(f.toString(), namedPipe, bufferSize);
-        controlChannel.sendCommand(open);
+        controlChannel.sendRequest(open);
         FileInputStream inputStream = new FileInputStream(namedPipe);
 
         return new PipedDataInputStream(namedPipe, inputStream, controlChannel);
@@ -61,9 +62,8 @@ public class PipedFileSystem extends FileSystem {
 
     private String createNamedPipe(Path f) throws IOException {
         try {
-            logger.info(String.format("Creating namedPipe for path '%s'.", f));
             String namedPipe = String.format("%s/%s.%s", localWorkingDir, UUID.randomUUID().toString(), f.getName());
-            logger.info(String.format("Creating namedPipe at '%s'.", namedPipe));
+            logger.info(String.format("Creating namedPipe for '%s' at '%s'.", f, namedPipe));
             NamedPipe.createPipe(namedPipe);
             logger.info(String.format("Creating namedPipe for path '%s' ended.", f));
             return namedPipe;
@@ -86,19 +86,27 @@ public class PipedFileSystem extends FileSystem {
          * progress参数和permission参数忽略先, 有需要再加.
          */
         String namedPipe = createNamedPipe(f);
+        logger.info(String.format("Named pipe '%s' has been created.", namedPipe));
+        Future<FileOutputStream> outputStream = NamedPipe.createOutputStreamAsync(namedPipe);
+        logger.info(String.format("Named pipe '%s' has been opened.", namedPipe));
+
         CreateCommand create =
                 new CreateCommand(f.toString(), namedPipe, overwrite, bufferSize, replication, blockSize);
-        controlChannel.sendCommand(create);
-        FileOutputStream outputStream = new FileOutputStream(namedPipe);
+        controlChannel.sendRequest(create);
 
-        return new PipedDataOutputStream(outputStream, null, controlChannel, namedPipe);
+        try {
+            return new PipedDataOutputStream(outputStream.get(), null, controlChannel, namedPipe);
+        } catch (Exception e) {
+            logger.error("Getting result from async createOutputStreamAsync failed.", e);
+            throw new IOException("Getting result from async createOutputStreamAsync failed.", e);
+        }
     }
 
     @Override
     public FSDataOutputStream append(Path f, int bufferSize, Progressable progress) throws IOException {
         String namedPipe = createNamedPipe(f);
         AppendCommand append = new AppendCommand(f, bufferSize);
-        controlChannel.sendCommand(append);
+        controlChannel.sendRequest(append);
         FileOutputStream outputStream = new FileOutputStream(namedPipe);
         return new PipedDataOutputStream(outputStream, null, controlChannel, namedPipe);
     }
@@ -107,7 +115,7 @@ public class PipedFileSystem extends FileSystem {
     public boolean rename(Path src, Path dst) throws IOException {
         Pipeable cmd = new RenameCommand(src, dst);
         synchronized (controlChannel) {
-            controlChannel.sendCommand(cmd);
+            controlChannel.sendRequest(cmd);
             return StreamUtils.readBoolean(controlChannel.getInput());
         }
     }
@@ -116,7 +124,7 @@ public class PipedFileSystem extends FileSystem {
     public boolean delete(Path f, boolean recursive) throws IOException {
         Pipeable cmd = new DeleteCommand(f, recursive);
         synchronized (controlChannel) {
-            controlChannel.sendCommand(cmd);
+            controlChannel.sendRequest(cmd);
             return StreamUtils.readBoolean(controlChannel.getInput());
         }
     }
@@ -126,7 +134,7 @@ public class PipedFileSystem extends FileSystem {
         Pipeable cmd = new ListStatusCommand(f);
         FileStatus[] ret;
         synchronized (controlChannel) {
-            controlChannel.sendCommand(cmd);
+            controlChannel.sendRequest(cmd);
             int len = StreamUtils.readInt(controlChannel.getInput());
             ret = new FileStatus[len];
 
@@ -143,7 +151,7 @@ public class PipedFileSystem extends FileSystem {
     public void setWorkingDirectory(Path new_dir) {
         Pipeable set = new SetWorkingDirectoryCommand(new_dir);
         try {
-            controlChannel.sendCommand(set);
+            controlChannel.sendRequest(set);
         }
         catch (IOException e) { // It must be something wrong with control channel, exist -1.
             logger.error(e);
@@ -156,7 +164,7 @@ public class PipedFileSystem extends FileSystem {
         Pipeable get = new GetWorkingDirectoryCommand();
         try {
             synchronized (controlChannel) {
-                controlChannel.sendCommand(get);
+                controlChannel.sendRequest(get);
                 return new Path(StreamUtils.readString(controlChannel.getInput()));
             }
         }
@@ -172,7 +180,7 @@ public class PipedFileSystem extends FileSystem {
     public boolean mkdirs(Path f, FsPermission permission) throws IOException {
         Pipeable cmd = new MkDirCommand(f);
         synchronized (controlChannel) {
-            controlChannel.sendCommand(cmd);
+            controlChannel.sendRequest(cmd);
             return StreamUtils.readBoolean(controlChannel.getInput());
         }
     }
@@ -181,7 +189,7 @@ public class PipedFileSystem extends FileSystem {
     public FileStatus getFileStatus(Path f) throws IOException {
         Pipeable cmd = new GetFileStatusCommand(f);
         synchronized (controlChannel) {
-            controlChannel.sendCommand(cmd);
+            controlChannel.sendRequest(cmd);
             FileStatus ret = new FileStatus();
             StreamUtils.readWritable(controlChannel.getInput(), ret);
             return ret;

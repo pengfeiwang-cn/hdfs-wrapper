@@ -129,7 +129,7 @@ public class StreamUtils {
     }
 
     public static long toLong(byte[] b) {
-        assert(b.length != 8);
+        assert(b.length == 8);
 
         return (b[0] & 0xFFL) << 56
                 | (b[1] & 0xFFL) << 48

@@ -29,14 +29,9 @@ public class PipedDataOutputStream extends FSDataOutputStream {
                                  @NotNull ControlChannel controlChannel,
                                  @NotNull String namedPipe) throws IOException {
         super(new InternalOutputStream(out, controlChannel, namedPipe, startPosition), stats, startPosition);
-        this.output = (InternalOutputStream)super.out;
+        this.output = (InternalOutputStream)super.getWrappedStream();
         this.controlChannel = controlChannel;
         this.namedPipe = namedPipe;
-    }
-
-    @Override
-    public long getPos() throws IOException {
-        return output.getPosition();
     }
 
     @Override
@@ -48,20 +43,20 @@ public class PipedDataOutputStream extends FSDataOutputStream {
     public void hflush() throws IOException {
         output.flush();
         Pipeable flush = new FlushCommand(namedPipe);
-        controlChannel.sendCommand(flush);
+        controlChannel.sendRequest(flush);
     }
 
     @Override
     public void hsync() throws IOException {
         output.flush();
         Pipeable sync = new SyncCommand(namedPipe);
-        controlChannel.sendCommand(sync);
+        controlChannel.sendRequest(sync);
     }
 
     @Override
     public void close() throws IOException {
         Pipeable close = new CloseWriterCommand(namedPipe);
-        controlChannel.sendCommand(close);
+        controlChannel.sendRequest(close);
         super.close();
     }
 
@@ -112,7 +107,7 @@ public class PipedDataOutputStream extends FSDataOutputStream {
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
                 Pipeable write = new WriteCommand(namedPipe, len);
-                controlChannel.sendCommand(write);
+                controlChannel.sendRequest(write);
                 super.write(b, off, len);
                 super.flush();
             }

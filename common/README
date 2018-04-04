@@ -1,3 +1,3 @@
 编译cpp代码:
-g++ -c -I"/Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include" -I"/Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include/darwin/" luxor_hdfs_pipe_NamedPipe.cpp
-g++ -shared -o libluxorpipe.so luxor_hdfs_pipe_NamedPipe.o
+g++ -c -I"/Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include" -I"/Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include/darwin/" luxor_hdfs_common_NamedPipe.cpp
+g++ -shared -o libluxorpipe.so luxor_hdfs_common_NamedPipe.o

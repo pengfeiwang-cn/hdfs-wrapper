@@ -55,7 +55,7 @@ public class PipedDataInputStream extends FSDataInputStream {
     @Override
     public void close() throws IOException {
         Pipeable close = new CloseReaderCommand(namedPipe);
-        controlChannel.sendCommand(close);
+        controlChannel.sendRequest(close);
         super.close();
     }
 
@@ -99,7 +99,7 @@ public class PipedDataInputStream extends FSDataInputStream {
             @Override
             public int read(byte[] b, int off, int len) throws IOException {
                 Pipeable read = new ReadCommand(namedPipe, len);
-                controlChannel.sendCommand(read);
+                controlChannel.sendRequest(read);
                 return input.read(b, off, len);
             }
 
@@ -123,7 +123,7 @@ public class PipedDataInputStream extends FSDataInputStream {
                     pos = (int) wanted;
                 } else {
                     Pipeable seek = new SeekCommand(namedPipe, wanted - left);
-                    controlChannel.sendCommand(seek);
+                    controlChannel.sendRequest(seek);
                     pos = count;
                 }
             }
@@ -133,7 +133,7 @@ public class PipedDataInputStream extends FSDataInputStream {
                 }
                 else {
                     Pipeable seek = new SeekCommand(namedPipe, desired);
-                    controlChannel.sendCommand(seek);
+                    controlChannel.sendRequest(seek);
                     pos = count;
                 }
             }
