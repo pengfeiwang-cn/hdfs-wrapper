@@ -59,10 +59,19 @@ public class PipedFileSystem extends FileSystem {
         return new PipedDataInputStream(namedPipe, inputStream, controlChannel);
     }
 
-    private String createNamedPipe(Path f) {
-        String namedPipe = String.format("%s/%s.%s", localWorkingDir, UUID.randomUUID().toString(), f.getName());
-        NamedPipe.createPipe(namedPipe);
-        return namedPipe;
+    private String createNamedPipe(Path f) throws IOException {
+        try {
+            logger.info(String.format("Creating namedPipe for path '%s'.", f));
+            String namedPipe = String.format("%s/%s.%s", localWorkingDir, UUID.randomUUID().toString(), f.getName());
+            logger.info(String.format("Creating namedPipe at '%s'.", namedPipe));
+            NamedPipe.createPipe(namedPipe);
+            logger.info(String.format("Creating namedPipe for path '%s' ended.", f));
+            return namedPipe;
+        }
+        catch (IOException e) {
+            logger.trace("createNamedPipe", e);
+            throw e;
+        }
     }
 
     @Override

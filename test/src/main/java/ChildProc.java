@@ -14,13 +14,16 @@ public class ChildProc {
             Runnable runnable = (Runnable)r.newInstance();
             runnable.run();
         } catch (ClassNotFoundException e) {
-            logger.error(e);
+            logger.error("ChildProc", e);
             System.exit(-1);
         } catch (InstantiationException e) {
-            logger.error(e);
+            logger.error("ChildProc", e);
             System.exit(-1);
         } catch (IllegalAccessException e) {
-            logger.error(e);
+            logger.error("ChildProc", e);
+            System.exit(-1);
+        } catch (Exception e) {
+            logger.error("ChildProc", e);
             System.exit(-1);
         }
 

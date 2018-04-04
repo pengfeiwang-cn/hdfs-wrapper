@@ -8,9 +8,11 @@ public abstract class TestCaseBase extends Assert implements Runnable{
     protected static final Logger logger = Logger.getLogger(TestCaseBase.class);
 
     public void doTest(String className) throws IOException, InterruptedException {
-        Driver driver = new Driver(String.format("/usr/bin/java -cp \"%s\" ChildProc %s",
+        Driver driver = new Driver("/usr/bin/java",
+                "-cp",
                 System.getProperty("java.class.path"),
-                className));
+                "ChildProc",
+                className);
         assertEquals(0, driver.Run());
     }
 }

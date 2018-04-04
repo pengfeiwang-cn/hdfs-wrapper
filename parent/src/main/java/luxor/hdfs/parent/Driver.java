@@ -29,21 +29,21 @@ public class Driver {
     private FileSystem fs;
     private int finishedStatus = 0;
 
-    public Driver(@NotNull String cmd) throws IOException {
+    public Driver(@NotNull String... cmd) throws IOException {
 //        child = Runtime.getRuntime().exec(cmd);
         ProcessBuilder pb = new ProcessBuilder(cmd);
         //pb.directory(new File("/tmp/fuck"));
         File log = new File("/tmp/fuck/log");
         pb.redirectErrorStream(true);
+        pb.redirectOutput();
         pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
         child = pb.start();
-        try {
-            int fuck = child.waitFor();
-            System.out.println(fuck);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
+//        try {
+//            int fuck = child.waitFor();
+//            System.out.println(fuck);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         controlChannel = new ControlChannel(child.getInputStream(), child.getOutputStream());
         Configuration conf = new Configuration();

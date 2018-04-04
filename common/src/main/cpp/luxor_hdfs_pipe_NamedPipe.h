@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_luxor_hdfs_pipe_NamedPipe_createPipeInternal
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jclass, jstring);
 
 #ifdef __cplusplus
 }
