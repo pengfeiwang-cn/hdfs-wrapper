@@ -2,16 +2,8 @@ import luxor.hdfs.fs.PipedFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.junit.Test;
-
-import java.io.IOException;
 
 public class TestCreate extends TestCaseBase {
-
-    @Test
-    public void go() throws IOException, InterruptedException {
-        doTest(this.getClass().getCanonicalName());
-    }
 
     public void run() {
         PipedFileSystem fs = new PipedFileSystem();
@@ -22,6 +14,7 @@ public class TestCreate extends TestCaseBase {
             fs.create(p);
             FileStatus status = fs.getFileStatus(p);
             assertFalse("assert create & getFileStatus.", status == null);
+            fs.delete(p, true);
             System.exit(0);
         } catch (Exception e) {
             logger.error("TestCreate", e);

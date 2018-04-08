@@ -130,18 +130,21 @@ public class Driver {
         FileStatus status = fs.getFileStatus(cmd.getPath());
         controlChannel.sendResponse(new Succeeded());
         StreamUtils.writeWritable(controlChannel.getOutput(), status);
+        controlChannel.getOutput().flush();
     }
 
     private void onRename(RenameCommand cmd) throws IOException {
         boolean result = fs.rename(cmd.getSrc(), cmd.getDst());
         controlChannel.sendResponse(new Succeeded());
         StreamUtils.writeBoolean(controlChannel.getOutput(), result);
+        controlChannel.getOutput().flush();
     }
 
     private void onDelete(DeleteCommand cmd) throws IOException {
         boolean result = fs.delete(cmd.getPath(), cmd.isRecursive());
         controlChannel.sendResponse(new Succeeded());
         StreamUtils.writeBoolean(controlChannel.getOutput(), result);
+        controlChannel.getOutput().flush();
     }
 
     private void onCloseReader(CloseReaderCommand cmd) throws IOException {

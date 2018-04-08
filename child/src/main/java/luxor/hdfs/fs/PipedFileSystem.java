@@ -125,7 +125,10 @@ public class PipedFileSystem extends FileSystem {
         Pipeable cmd = new DeleteCommand(f, recursive);
         synchronized (controlChannel) {
             controlChannel.sendRequest(cmd);
-            return StreamUtils.readBoolean(controlChannel.getInput());
+            logger.info(String.format("Deleting '%s'.", f));
+            boolean ret = StreamUtils.readBoolean(controlChannel.getInput());
+            logger.info(String.format("Deleting '%s' = %s.", f, ret));
+            return ret;
         }
     }
 
