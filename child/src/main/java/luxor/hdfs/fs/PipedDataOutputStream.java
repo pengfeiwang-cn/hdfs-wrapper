@@ -15,6 +15,7 @@ public class PipedDataOutputStream extends FSDataOutputStream {
     private InternalOutputStream output;
     private ControlChannel controlChannel;
     private String namedPipe;
+    private boolean closed = false;
 
     public PipedDataOutputStream(OutputStream out,
                                  FileSystem.Statistics stats,
@@ -55,9 +56,12 @@ public class PipedDataOutputStream extends FSDataOutputStream {
 
     @Override
     public void close() throws IOException {
-        Pipeable close = new CloseWriterCommand(namedPipe);
-        controlChannel.sendRequest(close);
-        super.close();
+        if (!closed) {
+            Pipeable close = new CloseWriterCommand(namedPipe);
+            controlChannel.sendRequest(close);
+            super.close();
+            closed = true;
+        }
     }
 
     /*

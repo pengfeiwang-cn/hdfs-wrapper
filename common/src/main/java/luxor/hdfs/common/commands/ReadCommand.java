@@ -42,4 +42,9 @@ public class ReadCommand extends Pipeable {
     public int getLength() {
         return length;
     }
+
+    @Override
+    public String toString() {
+        return String.format("ReadCommand:{namedPipe='%s', length=%s}", namedPipe, length);
+    }
 }

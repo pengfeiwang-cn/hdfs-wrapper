@@ -11,4 +11,9 @@ public class CloseWriterCommand extends FlushCommand {
     public int getType() {
         return Pipeable.CLOSEWRITER;
     }
+
+    @Override
+    public String toString() {
+        return String.format("CloseWriterCommand:{namedpipe='%s'}", getNamedPipe());
+    }
 }

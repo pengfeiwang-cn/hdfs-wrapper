@@ -53,11 +53,19 @@ public class PipedFileSystem extends FileSystem {
     @Override
     public FSDataInputStream open(Path f, int bufferSize) throws IOException {
         String namedPipe = createNamedPipe(f);
+
+        logger.info(String.format("Named pipe '%s' has been created.", namedPipe));
+        Future<FileInputStream> inputStream = NamedPipe.createInputStreamAsync(namedPipe);
+        logger.info(String.format("Named pipe '%s' has been opened.", namedPipe));
+
         OpenCommand open = new OpenCommand(f.toString(), namedPipe, bufferSize);
         controlChannel.sendRequest(open);
-        FileInputStream inputStream = new FileInputStream(namedPipe);
-
-        return new PipedDataInputStream(namedPipe, inputStream, controlChannel);
+        try {
+            return new PipedDataInputStream(namedPipe, inputStream.get(), controlChannel);
+        } catch (Exception e) {
+            logger.error("Getting result from async createInputStreamAsync failed.", e);
+            throw new IOException("Getting result from async createInputStreamAsync failed.", e);
+        }
     }
 
     private String createNamedPipe(Path f) throws IOException {
@@ -105,10 +113,19 @@ public class PipedFileSystem extends FileSystem {
     @Override
     public FSDataOutputStream append(Path f, int bufferSize, Progressable progress) throws IOException {
         String namedPipe = createNamedPipe(f);
+        logger.info(String.format("Named pipe '%s' has been created.", namedPipe));
+        Future<FileOutputStream> outputStream = NamedPipe.createOutputStreamAsync(namedPipe);
+        logger.info(String.format("Named pipe '%s' has been opened.", namedPipe));
+
         AppendCommand append = new AppendCommand(f, bufferSize);
         controlChannel.sendRequest(append);
-        FileOutputStream outputStream = new FileOutputStream(namedPipe);
-        return new PipedDataOutputStream(outputStream, null, controlChannel, namedPipe);
+
+        try {
+            return new PipedDataOutputStream(outputStream.get(), null, controlChannel, namedPipe);
+        } catch (Exception e) {
+            logger.error("Getting result from async createOutputStreamAsync failed.", e);
+            throw new IOException("Getting result from async createOutputStreamAsync failed.", e);
+        }
     }
 
     @Override

@@ -7,7 +7,7 @@ import java.io.OutputStream;
 public class GetWorkingDirectoryCommand extends Pipeable {
     @Override
     public int getType() {
-        return 0;
+        return Pipeable.GETWORKINGDIRECTORY;
     }
 
     @Override
@@ -18,5 +18,10 @@ public class GetWorkingDirectoryCommand extends Pipeable {
     @Override
     public void deserializeContents(InputStream input) throws IOException {
 
+    }
+
+    @Override
+    public String toString() {
+        return "GetWorkingDirectoryCommand";
     }
 }

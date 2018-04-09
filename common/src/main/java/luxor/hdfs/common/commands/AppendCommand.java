@@ -43,4 +43,9 @@ public class AppendCommand extends Pipeable {
     public int getBufferSize() {
         return bufferSize;
     }
+
+    @Override
+    public String toString() {
+        return String.format("AppendCommand:{path='%s', bufferSize='%s'}", path, bufferSize);
+    }
 }

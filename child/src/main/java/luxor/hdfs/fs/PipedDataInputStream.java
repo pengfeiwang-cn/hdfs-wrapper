@@ -2,11 +2,11 @@ package luxor.hdfs.fs;
 
 import com.sun.istack.internal.NotNull;
 import luxor.hdfs.common.ControlChannel;
-import luxor.hdfs.common.commands.CloseReaderCommand;
-import luxor.hdfs.common.commands.Pipeable;
-import luxor.hdfs.common.commands.ReadCommand;
-import luxor.hdfs.common.commands.SeekCommand;
+import luxor.hdfs.common.StreamUtils;
+import luxor.hdfs.common.commands.*;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.PositionedReadable;
+import org.apache.hadoop.fs.Seekable;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -27,6 +27,7 @@ public class PipedDataInputStream extends FSDataInputStream {
     private final ControlChannel controlChannel;
     private String namedPipe;
     private InternalInputStream input;
+    private boolean closed = false;
 
     public PipedDataInputStream(@NotNull String namedPipe,
                                 @NotNull InputStream in,
@@ -44,22 +45,26 @@ public class PipedDataInputStream extends FSDataInputStream {
 
     @Override
     public long getPos() throws IOException {
-        return input.getPosition();
+        return input.getPos();
     }
 
     @Override
     public boolean seekToNewSource(long targetPos) throws IOException {
-        throw new IOException("seekToNewSource is not supported.");
+        return input.seekToNewSource(targetPos);
     }
 
     @Override
     public void close() throws IOException {
-        Pipeable close = new CloseReaderCommand(namedPipe);
-        controlChannel.sendRequest(close);
-        super.close();
+        if (!closed) {
+            Pipeable close = new CloseReaderCommand(namedPipe);
+            controlChannel.sendRequest(close);
+            super.close();
+            closed = true;
+        }
     }
 
-    private static class InternalInputStream extends BufferedInputStream {
+    private static class InternalInputStream extends BufferedInputStream
+            implements Seekable, PositionedReadable {
         private final ControlChannel controlChannel;
         private String namedPipe;
         private long position = 0;
@@ -78,6 +83,26 @@ public class PipedDataInputStream extends FSDataInputStream {
             }
 
             return ret;
+        }
+
+        public int read(long position, byte[] buffer, int offset, int length) throws IOException {
+            synchronized (this) {
+                seek(position);
+                return in.read(buffer, offset, length);
+            }
+        }
+
+        // PositionedReadable是狗屎一般的接口
+        public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
+            synchronized (this) {
+                long old = position;
+                read(position, buffer, offset, length);
+                seek(position);
+            }
+        }
+
+        public void readFully(long position, byte[] buffer) throws IOException {
+            readFully(position, buffer, 0, buffer.length);
         }
 
         private static class ControlledInputStream extends InputStream{
@@ -110,10 +135,6 @@ public class PipedDataInputStream extends FSDataInputStream {
             }
         }
 
-        public long getPosition() {
-            return position;
-        }
-
         public void seek(long desired) throws IOException {
             int left = count - pos;
             long wanted = desired - position;
@@ -139,6 +160,16 @@ public class PipedDataInputStream extends FSDataInputStream {
             }
 
             position = desired;
+        }
+
+        public long getPos() throws IOException {
+            return position;
+        }
+
+        public boolean seekToNewSource(long targetPos) throws IOException {
+            Pipeable cmd = new SeekInNewSourceCommand(namedPipe, targetPos);
+            controlChannel.sendRequest(cmd);
+            return StreamUtils.readBoolean(controlChannel.getInput());
         }
     }
 }

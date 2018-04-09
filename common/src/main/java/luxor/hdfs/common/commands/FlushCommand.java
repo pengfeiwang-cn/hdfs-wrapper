@@ -34,4 +34,9 @@ public class FlushCommand extends Pipeable {
     public String getNamedPipe() {
         return namedPipe;
     }
+
+    @Override
+    public String toString() {
+        return String.format("FlushCommand:{namedPipe='%s'}", namedPipe);
+    }
 }

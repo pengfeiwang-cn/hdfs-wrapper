@@ -35,4 +35,9 @@ public class GetFileStatusCommand extends Pipeable {
     public Path getPath() {
         return path;
     }
+
+    @Override
+    public String toString() {
+        return String.format("GetFileStatusCommand:{path='%s'}", path);
+    }
 }

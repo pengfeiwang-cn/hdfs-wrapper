@@ -104,6 +104,7 @@ public class Driver {
                             }
                         }
                         catch (IOException e) {
+                            logger.error(String.format("Error occured when handling %s", cmd), e);
                             try {
                                 controlChannel.sendResponse(new PipedException(e.getMessage()));
                             } catch (IOException ex) {
@@ -122,6 +123,7 @@ public class Driver {
     }
 
     private void onSetWorkingDirectory(SetWorkingDirectoryCommand cmd) throws IOException {
+        logger.info(String.format("Driver.onSetWorkingDirectory - %s", cmd));
         fs.setWorkingDirectory(cmd.getPath());
         controlChannel.sendResponse(new Succeeded());
     }
@@ -177,9 +179,9 @@ public class Driver {
 
     private void onRead(ReadCommand rc) throws IOException {
         assert(readers.containsKey(rc.getNamedPipe()));
+        controlChannel.sendResponse(new Succeeded());
         InProxy inProxy = readers.get(rc.getNamedPipe());
         inProxy.read(rc.getLength());
-        controlChannel.sendResponse(new Succeeded());
     }
 
     private void onOpen(OpenCommand oc) throws IOException {
@@ -206,8 +208,8 @@ public class Driver {
 
     private void onWrite(WriteCommand wc) throws IOException {
         assert(writers.containsKey(wc.getNamedPipe()));
+        controlChannel.sendResponse(new Succeeded());
         OutProxy outProxy = writers.get(wc.getNamedPipe());
         outProxy.write(wc.getLength());
-        controlChannel.sendResponse(new Succeeded());
     }
 }

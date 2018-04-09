@@ -42,4 +42,9 @@ public class SeekCommand extends Pipeable {
     public long getDesired() {
         return desired;
     }
+
+    @Override
+    public String toString() {
+        return String.format("SeekCommand:{namedPipe='%s', desired=%s}", namedPipe, desired);
+    }
 }

@@ -43,4 +43,9 @@ public class RenameCommand extends Pipeable {
     public Path getDst() {
         return dst;
     }
+
+    @Override
+    public String toString() {
+        return String.format("RenameCommand:{source='%s', destination='%s'}", src, dst);
+    }
 }

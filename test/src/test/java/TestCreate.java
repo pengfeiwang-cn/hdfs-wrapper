@@ -14,7 +14,7 @@ public class TestCreate extends TestCaseBase {
             fs.create(p);
             FileStatus status = fs.getFileStatus(p);
             assertFalse("assert create & getFileStatus.", status == null);
-            fs.delete(p, true);
+            assertTrue(fs.delete(p, true));
             System.exit(0);
         } catch (Exception e) {
             logger.error("TestCreate", e);

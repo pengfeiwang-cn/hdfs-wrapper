@@ -11,4 +11,9 @@ public class WriteCommand extends ReadCommand {
     public int getType() {
         return Pipeable.WRITE;
     }
+
+    @Override
+    public String toString() {
+        return String.format("WriteCommand:{namedPipe='%s', length=%s}", getNamedPipe(), getLength());
+    }
 }

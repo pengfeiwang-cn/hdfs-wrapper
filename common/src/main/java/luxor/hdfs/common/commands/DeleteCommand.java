@@ -43,4 +43,9 @@ public class DeleteCommand extends Pipeable {
     public boolean isRecursive() {
         return recursive;
     }
+
+    @Override
+    public String toString() {
+        return String.format("DeleteCommand:{path='%s', recuisive=%s}", path, recursive);
+    }
 }

@@ -29,12 +29,14 @@ public class OpenCommand extends Pipeable {
     public void serializeContents(OutputStream output) throws IOException {
         StreamUtils.writeString(output, path);
         StreamUtils.writeString(output, namedPipe);
+        StreamUtils.writeInt(output, bufferSize);
     }
 
     @Override
     public void deserializeContents(InputStream input) throws IOException {
         path = StreamUtils.readString(input);
         namedPipe = StreamUtils.readString(input);
+        bufferSize = StreamUtils.readInt(input);
     }
 
     public String getPath() {
@@ -47,5 +49,11 @@ public class OpenCommand extends Pipeable {
 
     public int getBufferSize() {
         return bufferSize;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("OpenCommand:{path='%s', namedPipe='%s', bufferSize=%s",
+                path, namedPipe, bufferSize);
     }
 }

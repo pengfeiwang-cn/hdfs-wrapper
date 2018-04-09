@@ -79,4 +79,11 @@ public class CreateCommand extends Pipeable {
     public long getBlockSize() {
         return blockSize;
     }
+
+    @Override
+    public String toString() {
+        return String.format("CreateCommand:{path='%s', namedPipe='%s'," +
+                " overwrite=%s, bufferSize=%s, replication=%s, blockSize=%s}",
+                path, namedPipe, overwrite, bufferSize, replication, blockSize);
+    }
 }

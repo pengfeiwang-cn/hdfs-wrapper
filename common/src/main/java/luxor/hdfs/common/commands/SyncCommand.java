@@ -11,4 +11,9 @@ public class SyncCommand extends FlushCommand {
     public SyncCommand(String namedPipe) {
         super(namedPipe);
     }
+
+    @Override
+    public String toString() {
+        return String.format("SyncCommand:{namedPipe='%s'}", getNamedPipe());
+    }
 }

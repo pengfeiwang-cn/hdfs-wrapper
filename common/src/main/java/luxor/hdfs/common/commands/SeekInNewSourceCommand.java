@@ -12,4 +12,9 @@ public class SeekInNewSourceCommand extends SeekCommand {
     public int getType() {
         return Pipeable.SEEKINNEWSOURCE;
     }
+
+    @Override
+    public String toString() {
+        return String.format("SeekInNewSourceCommand:{namedPipe='%s', desired=%s}", getNamedPipe(), getDesired());
+    }
 }

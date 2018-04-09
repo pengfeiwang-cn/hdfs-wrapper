@@ -19,4 +19,9 @@ public class Succeeded extends Pipeable {
     public void deserializeContents(InputStream input) throws IOException {
         //nothing to do.
     }
+
+    @Override
+    public String toString() {
+        return "Succeeded";
+    }
 }

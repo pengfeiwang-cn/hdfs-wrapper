@@ -35,4 +35,9 @@ public class ListStatusCommand extends Pipeable {
     public Path getPath() {
         return path;
     }
+
+    @Override
+    public String toString() {
+        return String.format("ListStatusCommand:{path='%s'}", path);
+    }
 }

@@ -30,4 +30,9 @@ public class GetPositionCommand extends Pipeable {
     public void deserializeContents(InputStream input) throws IOException {
         namedPipe = StreamUtils.readString(input);
     }
+
+    @Override
+    public String toString() {
+        return String.format("GetPositionCommand:{namedPipe='%s'}", namedPipe);
+    }
 }

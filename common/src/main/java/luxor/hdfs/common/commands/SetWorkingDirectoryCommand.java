@@ -35,4 +35,9 @@ public class SetWorkingDirectoryCommand extends Pipeable {
     public Path getPath() {
         return path;
     }
+
+    @Override
+    public String toString() {
+        return String.format("SetWorkingDirectoryCommand:{path='%s'}", path);
+    }
 }

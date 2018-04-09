@@ -11,4 +11,9 @@ public class CloseReaderCommand extends FlushCommand {
     public int getType() {
         return Pipeable.CLOSEREADER;
     }
+
+    @Override
+    public String toString() {
+        return String.format("CloseReaderCommand:{namedpipe='%s'}", getNamedPipe());
+    }
 }

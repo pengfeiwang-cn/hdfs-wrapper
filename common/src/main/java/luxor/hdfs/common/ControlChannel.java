@@ -25,10 +25,10 @@ public class ControlChannel {
      */
     public void sendRequest(Pipeable cmd) throws IOException {
         synchronized (this) {
-            logger.info(String.format("Sending Command, type = %d", cmd.getType()));
+            logger.info(String.format("Sending Command - %s", cmd));
             Pipeable.serialize(cmd, output);
             Pipeable result = waitCommand();
-            logger.info(String.format("Got result, type = %d", result.getType()));
+            logger.info(String.format("Got result - %s", result));
             if (result instanceof PipedException) {
                 throw new IOException(((PipedException)result).getMessage());
             }

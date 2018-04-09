@@ -37,4 +37,9 @@ public class PipedException extends Pipeable {
     public String getMessage() {
         return message;
     }
+
+    @Override
+    public String toString() {
+        return String.format("PipedException:'%s'", message);
+    }
 }

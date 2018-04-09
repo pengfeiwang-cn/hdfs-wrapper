@@ -35,4 +35,9 @@ public class MkDirCommand extends Pipeable {
     public Path getPath() {
         return path;
     }
+
+    @Override
+    public String toString() {
+        return String.format("MkDirCommand:{path='%s'}", path);
+    }
 }
