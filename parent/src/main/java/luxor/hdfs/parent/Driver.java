@@ -16,6 +16,8 @@ import org.apache.log4j.Logger;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,85 +44,101 @@ public class Driver {
         Thread worker = new Thread() {
             @Override
             public void run() {
-                while (true) {
-                    Pipeable cmd = controlChannel.waitCommand();
-                    logger.info(String.format("Driver.run gets a %s.", cmd));
-                    if (cmd == null) {
-                        break;
-                    }
-                    else {
-                        try {
-                            switch (cmd.getType()) {
-                                case Pipeable.CREATE: {
-                                    onCreate((CreateCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.OPEN: {
-                                    onOpen((OpenCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.READ: {
-                                    onRead((ReadCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.WRITE: {
-                                    onWrite((WriteCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.CLOSEREADER: {
-                                    onCloseReader((CloseReaderCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.CLOSEWRITER: {
-                                    onCloseWriter((CloseWriterCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.FLUSH: {
-                                    onFlush((FlushCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.SYNC: {
-                                    onSync((SyncCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.DELETE: {
-                                    onDelete((DeleteCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.RENAME: {
-                                    onRename((RenameCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.GETFILESTATUS: {
-                                    onGetFileStatus((GetFileStatusCommand) cmd);
-                                    break;
-                                }
-                                case Pipeable.SETWORKINGDIRECTORY: {
-                                    onSetWorkingDirectory((SetWorkingDirectoryCommand) cmd);
-                                    break;
-                                }
-                                // TODO: not finished.
-                                default:
-                                    assert(false);
-                            }
-                        }
-                        catch (IOException e) {
-                            logger.error(String.format("Error occured when handling %s", cmd), e);
-                            try {
-                                controlChannel.sendResponse(new PipedException(e.getMessage()));
-                            } catch (IOException ex) {
-                                logger.error("Control channel is broken.", ex);
-                                finishedStatus = -1;
-                            }
-                        }
-                    }
-                }
+                workerProc();
             }
         };
 
         worker.start();
         int ret = child.waitFor();
+
+        cleanPipes();
+
         return (ret != 0 || finishedStatus != 0) ? -1 : 0;
+    }
+
+    private void workerProc() {
+        while (true) {
+            Pipeable cmd = controlChannel.waitCommand();
+            logger.info(String.format("Driver.run gets a %s.", cmd));
+            if (cmd == null) {
+                break;
+            }
+            else {
+                try {
+                    switch (cmd.getType()) {
+                        case Pipeable.CREATE: {
+                            onCreate((CreateCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.OPEN: {
+                            onOpen((OpenCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.READ: {
+                            onRead((ReadCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.WRITE: {
+                            onWrite((WriteCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.CLOSEREADER: {
+                            onCloseReader((CloseReaderCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.CLOSEWRITER: {
+                            onCloseWriter((CloseWriterCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.FLUSH: {
+                            onFlush((FlushCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.SYNC: {
+                            onSync((SyncCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.DELETE: {
+                            onDelete((DeleteCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.RENAME: {
+                            onRename((RenameCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.GETFILESTATUS: {
+                            onGetFileStatus((GetFileStatusCommand) cmd);
+                            break;
+                        }
+                        case Pipeable.SETWORKINGDIRECTORY: {
+                            onSetWorkingDirectory((SetWorkingDirectoryCommand) cmd);
+                            break;
+                        }
+                        // TODO: not finished.
+                        default:
+                            assert(false);
+                    }
+                }
+                catch (IOException e) {
+                    logger.error(String.format("Error occured when handling %s", cmd), e);
+                    try {
+                        controlChannel.sendResponse(new PipedException(e.getMessage()));
+                    } catch (IOException ex) {
+                        logger.error("Control channel is broken.", ex);
+                        finishedStatus = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    private void cleanPipes() throws IOException {
+        for (String file : readers.keySet()) {
+            Files.delete(FileSystems.getDefault().getPath(file));
+        }
+        for (String file : writers.keySet()) {
+            Files.delete(FileSystems.getDefault().getPath(file));
+        }
     }
 
     private void onSetWorkingDirectory(SetWorkingDirectoryCommand cmd) throws IOException {

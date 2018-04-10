@@ -2,7 +2,7 @@ package luxor.hdfs.common;
 
 import org.junit.Assert;
 
-import java.io.File;
+import java.nio.file.*;
 
 public class NamedPipeTest extends Assert {
 
@@ -11,6 +11,6 @@ public class NamedPipeTest extends Assert {
         String path = "/tmp/abc";
         NamedPipe.createPipe(path); //no exception means OK.
 
-        assertTrue((new File(path)).delete());
+        Files.delete(java.nio.file.FileSystems.getDefault().getPath(path));
     }
 }
