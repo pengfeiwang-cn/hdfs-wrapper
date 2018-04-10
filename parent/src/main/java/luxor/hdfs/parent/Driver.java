@@ -114,6 +114,10 @@ public class Driver {
                             onSetWorkingDirectory((SetWorkingDirectoryCommand) cmd);
                             break;
                         }
+                        case Pipeable.SEEK: {
+                            onSeek((SeekCommand) cmd);
+                            break;
+                        }
                         // TODO: not finished.
                         default:
                             assert(false);
@@ -130,6 +134,13 @@ public class Driver {
                 }
             }
         }
+    }
+
+    private void onSeek(SeekCommand cmd) throws IOException {
+        assert(readers.containsKey(cmd.getNamedPipe()));
+        InProxy inProxy = readers.get(cmd.getNamedPipe());
+        inProxy.seek(cmd.getDesired());
+        controlChannel.sendResponse(new Succeeded());
     }
 
     private void cleanPipes() throws IOException {

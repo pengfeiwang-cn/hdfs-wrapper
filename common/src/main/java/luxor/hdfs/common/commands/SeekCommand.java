@@ -20,7 +20,7 @@ public class SeekCommand extends Pipeable {
 
     @Override
     public int getType() {
-        return Pipeable.READ;
+        return Pipeable.SEEK;
     }
 
     @Override
