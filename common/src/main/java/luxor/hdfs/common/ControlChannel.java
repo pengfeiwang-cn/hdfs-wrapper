@@ -53,6 +53,7 @@ public class ControlChannel {
             return Pipeable.deserialize(input);
         }
         catch (IOException e) {
+            logger.warn("When waitCommand in control channel, exception occured.", e);
             return null;
         }
     }

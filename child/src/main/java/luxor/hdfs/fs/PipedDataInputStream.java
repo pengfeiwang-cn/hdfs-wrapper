@@ -97,7 +97,7 @@ public class PipedDataInputStream extends FSDataInputStream {
             synchronized (this) {
                 long old = position;
                 read(position, buffer, offset, length);
-                seek(position);
+                seek(old);
             }
         }
 
@@ -125,7 +125,16 @@ public class PipedDataInputStream extends FSDataInputStream {
             public int read(byte[] b, int off, int len) throws IOException {
                 Pipeable read = new ReadCommand(namedPipe, len);
                 controlChannel.sendRequest(read);
-                return input.read(b, off, len);
+                int rl = StreamUtils.readInt(input);
+                if (rl == -1) return -1;
+
+                int rl_pipe = input.read(b, off, rl);
+
+                if (rl != rl_pipe) { // It should be a system error.
+                    throw new RuntimeException(
+                            String.format("Parent reads %s, but got %s bytes from pipe.", rl, rl_pipe));
+                }
+                return rl;
             }
 
             @Override

@@ -37,7 +37,7 @@ public class PipedDataOutputStream extends FSDataOutputStream {
 
     @Override
     public void flush() throws IOException {
-        output.flush();
+        hsync();
     }
 
     @Override

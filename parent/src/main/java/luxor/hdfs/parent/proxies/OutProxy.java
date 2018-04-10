@@ -16,6 +16,8 @@ public class OutProxy extends Proxy {
             throws FileNotFoundException {
         this.output = output;
         this.dataOutputChannel = dataOutputChannel;
+        setInput(dataOutputChannel);
+        setOutput(output);
     }
 
     @Override
@@ -48,7 +50,7 @@ public class OutProxy extends Proxy {
     }
 
     public void write(int length) throws IOException {
-        readThenWrite(length, dataOutputChannel, output);
+        readThenWrite(length);
     }
 
     public FSDataOutputStream getOutput() {
@@ -57,5 +59,19 @@ public class OutProxy extends Proxy {
 
     public InputStream getDataOutputChannel() {
         return dataOutputChannel;
+    }
+
+    private  void readThenWrite(int length) throws IOException {
+        int alreadyRead = 0;
+        while (alreadyRead < length) {
+            int left = length - alreadyRead;
+            int rl = getInput().read(buffer, 0, MAX_BUFFER_SIZE >= left ? left : MAX_BUFFER_SIZE);
+            if (rl == -1) { // EOF, it must be something wrong
+                throw new RuntimeException(
+                        String.format("In OutProxy, %s bytes should be read, but got %s.", length, alreadyRead));
+            }
+            output.write(buffer, 0, rl);
+            alreadyRead += rl;
+        }
     }
 }

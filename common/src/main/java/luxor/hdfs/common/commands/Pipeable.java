@@ -1,6 +1,7 @@
 package luxor.hdfs.common.commands;
 
 import luxor.hdfs.common.StreamUtils;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +33,8 @@ public abstract class Pipeable {
     public abstract int getType();
     public abstract void serializeContents(OutputStream output) throws IOException;
     public abstract void deserializeContents(InputStream input) throws IOException;
+
+    private static final Logger logger = Logger.getLogger(Pipeable.class);
 
     public static void serialize(Pipeable cmd, OutputStream output) throws IOException {
         StreamUtils.writeInt(output, cmd.getType());
@@ -116,4 +119,14 @@ public abstract class Pipeable {
         return ret;
     }
 
+    protected void logStack() {
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 20 && i < stack.length; i++) {
+            sb.append('\t');
+            sb.append(stack[i]);
+            sb.append(System.lineSeparator());
+        }
+        logger.info(sb.toString());
+    }
 }

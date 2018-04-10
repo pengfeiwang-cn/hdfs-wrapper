@@ -44,6 +44,7 @@ public class Driver {
             public void run() {
                 while (true) {
                     Pipeable cmd = controlChannel.waitCommand();
+                    logger.info(String.format("Driver.run gets a %s.", cmd));
                     if (cmd == null) {
                         break;
                     }

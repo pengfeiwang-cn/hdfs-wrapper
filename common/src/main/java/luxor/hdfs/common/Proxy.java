@@ -1,5 +1,7 @@
 package luxor.hdfs.common;
 
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -7,21 +9,25 @@ import java.io.OutputStream;
 public abstract class Proxy {
     protected static final int MAX_BUFFER_SIZE = 8192;
     protected byte[] buffer = new byte[MAX_BUFFER_SIZE];
+    protected static final Logger logger = Logger.getLogger(Proxy.class);
 
-    protected void readThenWrite(int length, InputStream input, OutputStream output) throws IOException {
-        int alreadyRead = 0;
-        while (alreadyRead < length) {
-            int left = length - alreadyRead;
-            int rl = input.read(buffer, 0, MAX_BUFFER_SIZE >= left ? left : MAX_BUFFER_SIZE);
-            if (rl == -1) { // EOF
-                input.close();
-                output.close();
-                break;
-            }
+    private InputStream input;
+    private OutputStream output;
 
-            output.write(buffer, 0, rl);
-            alreadyRead += rl;
-        }
+    public InputStream getInput() {
+        return input;
+    }
+
+    public void setInput(InputStream input) {
+        this.input = input;
+    }
+
+    public OutputStream getOutput() {
+        return output;
+    }
+
+    public void setOutput(OutputStream output) {
+        this.output = output;
     }
 
     public abstract void close() throws IOException;
